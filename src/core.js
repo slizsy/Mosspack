@@ -2,33 +2,21 @@
 /* ================================================================================================
  * Mosspack core (appended to the game's runtime.js by apply_mods.py, before the other Mosspack scripts)
  *
- * Shared by lan.js and client.js:
+ * Used by lan.js:
  *   - byte helpers for the game's binary protocols (Out / In)
  *   - the runtime hooks apply_mods.py adds to runtime.js:
  *       self.__mosspackRecv(ch, buf)       every packet the world worker sends to the page
  *       self.__mosspackFilterOut(ch, bytes) every packet the page sends to the worker (return true to drop)
  *       self.__mosspackSend(ch, buf)       post a packet to the worker
- *       self.__mosspackOnInstance(inst)    the game's WebAssembly instance (for the exports Mosspack adds)
  *   - whether a singleplayer world is running (Mosspack.world)
  *   - small UI helpers (style injection, buttons that don't steal keyboard focus, toasts)
  * ============================================================================================= */
 (function () {
 	"use strict";
-	if (typeof window === "undefined" || typeof document === "undefined") {
-		// World-server worker: receive Moss Client's server-side switches (God Mode, No Fall, No Hunger)
-		let exports = null, flags = 0;
-		self.__mosspackOnInstance = function (inst) {
-			if (inst && inst.exports && inst.exports["mosspack.setFlags"]) { exports = inst.exports; exports["mosspack.setFlags"](flags); }
-		};
-		self.__mosspackWorkerFlags = function (buf) {
-			flags = new DataView(buf).getUint32(0);
-			if (exports) exports["mosspack.setFlags"](flags);
-		};
-		return;
-	}
+	if (typeof window === "undefined" || typeof document === "undefined") return;   // the world-server worker
 
 	const IPC = "~!IPC", LOCAL = "~!LOCAL_PLAYER";
-	const M = self.Mosspack = { IPC, LOCAL, world: false, exports: null };
+	const M = self.Mosspack = { IPC, LOCAL, world: false };
 
 	// ------------------------------------------------------------------ bytes
 	M.Out = class Out {
@@ -56,11 +44,10 @@
 	};
 
 	// ------------------------------------------------------------------ runtime hooks
-	const recvHandlers = [], outHandlers = [], worldHandlers = [], readyHandlers = [];
+	const recvHandlers = [], outHandlers = [], worldHandlers = [];
 	M.onRecv = (fn) => recvHandlers.push(fn);         // fn(ch, ArrayBuffer) -> true to consume
 	M.onSend = (fn) => outHandlers.push(fn);          // fn(ch, Uint8Array)  -> true to drop
 	M.onWorld = (fn) => worldHandlers.push(fn);       // fn(isOpen)
-	M.onReady = (fn) => readyHandlers.push(fn);       // fn() once the game's WebAssembly exports are available
 	function setWorld(open) {
 		if (M.world === open) return;
 		M.world = open;
@@ -76,11 +63,6 @@
 		if (ch === IPC && (bytes[0] & 255) === 0x01) setWorld(false);        // IPCPacket01StopServer: world closing
 		for (const fn of outHandlers) if (fn(ch, bytes)) return true;
 		return false;
-	};
-	self.__mosspackOnInstance = function (inst) {
-		if (!inst || !inst.exports || !inst.exports["mosspack.setFlags"]) return;
-		M.exports = inst.exports;
-		for (const fn of readyHandlers) fn();
 	};
 	M.toWorker = function (ch, bytes) {
 		if (!self.__mosspackSend) return;

@@ -49,7 +49,7 @@
 	window.__mosspackPreflight = card;
 
 	// Reset: open the file with #reset at the end of the address to delete everything this browser saved for it
-	// (worlds, resource packs, servers, settings, profile, Moss Client). Runs before the game opens its storage.
+	// (worlds, resource packs, servers, settings, profile). Runs before the game opens its storage.
 	if (location.hash === "#reset") {
 		window.__mosspackBlocked = true;
 		window.__mosspackReset = function () {
@@ -67,7 +67,7 @@
 				start.onclick = function () { location.replace(location.href.split("#")[0]); };
 			});
 		};
-		card("Reset Mosspack?", ["This deletes everything this browser saved for Mosspack: <b>all worlds</b>, resource packs, servers, settings, your profile and Moss Client settings. It can't be undone.",
+		card("Reset Mosspack?", ["This deletes everything this browser saved for Mosspack: <b>all worlds</b>, resource packs, servers, settings and your profile. It can't be undone.",
 			'<button onclick="__mosspackReset()" style="background:#c0503f;color:#fff;border:none;border-radius:4px;padding:11px 18px;font:700 15px/1 inherit;cursor:pointer">Delete everything</button> ' +
 			'<a href="#" onclick="location.replace(location.href.split(\'#\')[0]);return false" style="color:#a8b59c;margin-left:10px">Cancel</a>']);
 		overlay.querySelector("button[onclick='location.reload()']").remove();

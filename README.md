@@ -18,8 +18,6 @@
 - **LAN that works anywhere.** Press Esc → **Open to LAN** and you get a six-letter code. Friends type it into
   Direct Connect from their own Wi-Fi, school network or phone hotspot. No server, no port forwarding, no app.
 - **Zoom** (hold **Z**) and a **Toggle FPS Display** key (**F4**), both rebindable in Controls.
-- **Moss Client:** a Meteor-style module menu (Fly, Speed, Fullbright, ESP, God Mode and more) that only
-  works in your own worlds. Unlock it with `/hacks <code>` in chat, then press **Right Shift**.
 - **Quality-of-life fixes:** starts straight to the title screen, clear start screen, faster list scrolling,
   join/leave notifications, and a friendly page instead of a blank screen when a browser can't run it.
 
@@ -116,8 +114,8 @@ Mosspack now shows a message if it can't start. If you still see nothing:
 
 **I want to start over.**
 Open the file with `#reset` added to the end of the address (for example `.../Mosspack.html#reset`) and click
-**Delete everything**. That clears this browser's worlds, resource packs, servers, settings, profile and
-Moss Client settings for that file.
+**Delete everything**. That clears this browser's worlds, resource packs, servers, settings and profile
+for that file.
 
 **It runs slowly.** Lower Render Distance, turn Clouds off and set Particles to Decreased in Video Settings.
 
@@ -128,7 +126,6 @@ Only original Mosspack code and release builds. Game code and assets are not sto
 ```
 src/core.js              shared helpers and the hooks Mosspack adds to the game runtime
 src/lan/lan.js           LAN: code generation, WebRTC matchmaking, host bridge, LanSocket
-src/client/client.js     Moss Client: module menu, HUD list, /hacks unlock
 src/ui/start-screen.js   the "Click or press any key to start" screen
 src/ui/preflight.html    browser checks, loading screen, no-blank-page safety net, #reset
 src/ui/browser-help.html page shown when the browser lacks JSPI
