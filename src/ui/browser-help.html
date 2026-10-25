@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mosspack can't start in this browser</title>
+<style>
+	:root {
+		--bg: #12170f;
+		--card: #1c2417;
+		--card-2: #232d1d;
+		--line: #34422b;
+		--text: #e9eee3;
+		--muted: #a8b59c;
+		--moss: #6fbf4a;
+		--moss-dark: #3f7a29;
+		--stone: #8a8a86;
+		--warn: #e8b84a;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; min-height: 100%; }
+	body {
+		background:
+			linear-gradient(180deg, rgba(18,23,15,0) 0, var(--bg) 220px),
+			repeating-linear-gradient(90deg, #1a2214 0 16px, #161d11 16px 32px),
+			var(--bg);
+		color: var(--text);
+		font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+		padding: 40px 20px 60px;
+	}
+	.wrap { max-width: 760px; margin: 0 auto; }
+	header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+	header img { width: 40px; height: 40px; image-rendering: pixelated; }
+	.brand { font: 700 22px/1 Menlo, Consolas, "Courier New", monospace; letter-spacing: 0.04em; }
+	.brand span { color: var(--moss); }
+	.card {
+		background: var(--card);
+		border: 2px solid var(--line);
+		border-radius: 6px;
+		box-shadow: 0 4px 0 #0b0e09, 0 18px 40px rgba(0,0,0,0.35);
+		padding: 30px 32px;
+	}
+	h1 { font-size: 28px; line-height: 1.25; margin: 0 0 10px; }
+	.lead { color: var(--muted); margin: 0 0 18px; }
+	.detected {
+		display: inline-flex; align-items: center; gap: 8px;
+		background: var(--card-2); border: 1px solid var(--line); border-radius: 999px;
+		padding: 5px 14px; font-size: 14px; color: var(--muted); margin-bottom: 24px;
+	}
+	.detected b { color: var(--text); }
+	.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+	.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 2px solid var(--line); margin-bottom: 22px; }
+	.tab {
+		appearance: none; border: 2px solid transparent; border-bottom: none; background: none;
+		color: var(--muted); font: 600 15px/1 inherit; font-family: inherit;
+		padding: 10px 16px; border-radius: 5px 5px 0 0; cursor: pointer; margin-bottom: -2px;
+	}
+	.tab:hover { color: var(--text); }
+	.tab[aria-selected="true"] { color: var(--text); background: var(--card-2); border-color: var(--line); border-bottom: 2px solid var(--card-2); }
+	.panel[hidden] { display: none; }
+	ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+	ol.steps > li { counter-increment: step; position: relative; padding: 0 0 20px 46px; }
+	ol.steps > li::before {
+		content: counter(step);
+		position: absolute; left: 0; top: -2px; width: 30px; height: 30px;
+		display: grid; place-items: center;
+		font: 700 15px/1 Menlo, Consolas, monospace;
+		color: #0f140c; background: var(--moss);
+		box-shadow: inset -3px -3px 0 var(--moss-dark);
+	}
+	.step-title { font-weight: 600; }
+	.hint { color: var(--muted); font-size: 14px; }
+	.code-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 4px; }
+	code {
+		font: 14px/1.4 Menlo, Consolas, monospace;
+		background: #0f140c; border: 1px solid var(--line); border-radius: 4px;
+		padding: 6px 10px; color: #cfe8bf; word-break: break-all;
+	}
+	button.copy, a.btn, button.btn {
+		appearance: none; cursor: pointer; font: 600 14px/1 inherit; font-family: inherit;
+		border-radius: 4px; padding: 8px 12px; text-decoration: none; display: inline-block;
+	}
+	button.copy { background: var(--card-2); color: var(--text); border: 1px solid var(--line); }
+	button.copy:hover { border-color: var(--moss); }
+	details { margin-top: 8px; }
+	summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+	details img { display: block; max-width: 100%; height: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 4px; }
+	.note {
+		background: rgba(232,184,74,0.08); border: 1px solid rgba(232,184,74,0.35);
+		border-radius: 5px; padding: 12px 14px; font-size: 14px; color: #f1dcaa; margin-bottom: 20px;
+	}
+	.actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 26px; padding-top: 22px; border-top: 2px solid var(--line); }
+	button.btn.primary { background: var(--moss); color: #0f140c; border: none; box-shadow: inset -3px -3px 0 var(--moss-dark); padding: 12px 20px; font-size: 15px; }
+	button.btn.primary:hover { filter: brightness(1.08); }
+	.actions .hint { flex: 1; min-width: 200px; }
+	footer { text-align: center; color: #5f6d55; font-size: 13px; margin-top: 22px; }
+	@media (max-width: 520px) { .card { padding: 22px 18px; } h1 { font-size: 23px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header>
+		<img src="{{ICON}}" alt="">
+		<div class="brand">moss<span>pack</span></div>
+	</header>
+
+	<main class="card">
+		<h1>Your browser needs one setting turned on</h1>
+		<p class="lead">Mosspack runs on <b>JSPI</b> (WebAssembly JavaScript Promise Integration). Recent versions of
+			Chrome, Edge and Brave have it on already. If you're seeing this page, your browser is either out of date
+			or has it switched off. It takes about a minute to fix.</p>
+
+		<div class="detected"><span class="dot"></span><span>Detected: <b id="detected">your browser</b></span></div>
+
+		<div class="tabs" role="tablist">
+			<button class="tab" role="tab" data-tab="brave">Brave</button>
+			<button class="tab" role="tab" data-tab="chrome">Chrome</button>
+			<button class="tab" role="tab" data-tab="edge">Edge</button>
+			<button class="tab" role="tab" data-tab="firefox">Firefox</button>
+			<button class="tab" role="tab" data-tab="safari">Safari</button>
+		</div>
+
+		<section class="panel" data-panel="brave" hidden>
+			<ol class="steps">
+				<li><div class="step-title">Update Brave</div>
+					<div class="hint">Menu → About Brave. Updating usually fixes it on its own, so try the game again first.</div></li>
+				<li><div class="step-title">Still not working? Open this address in a new tab</div>
+					<div class="code-row"><code>brave://flags/#enable-experimental-webassembly-jspi</code><button class="copy">Copy</button></div>
+					<div class="hint">Browsers don't let pages open settings links, so paste it into the address bar yourself.</div></li>
+				<li><div class="step-title">Set "Experimental WebAssembly JavaScript Promise Integration" to Enabled</div>
+					<details><summary>Show screenshot</summary><img src="{{IMG2}}" alt="The JSPI flag set to Enabled"></details></li>
+				<li><div class="step-title">Click Relaunch, then open Mosspack again</div></li>
+			</ol>
+		</section>
+
+		<section class="panel" data-panel="chrome" hidden>
+			<ol class="steps">
+				<li><div class="step-title">Update Chrome</div>
+					<div class="hint">⋮ menu → Help → About Google Chrome. Chrome 137 and newer have JSPI on by default.</div></li>
+				<li><div class="step-title">Still not working? Open this address in a new tab</div>
+					<div class="code-row"><code>chrome://flags/#enable-experimental-webassembly-jspi</code><button class="copy">Copy</button></div>
+					<details><summary>Show screenshot</summary><img src="{{IMG0}}" alt="chrome://flags in the address bar"></details></li>
+				<li><div class="step-title">Set "Experimental WebAssembly JavaScript Promise Integration" to Enabled</div>
+					<div class="hint">On older or modified versions it may just be called "Experimental WebAssembly".</div>
+					<details><summary>Show screenshots</summary><img src="{{IMG1}}" alt="Searching for JSPI"><img src="{{IMG2}}" alt="The flag set to Enabled"></details></li>
+				<li><div class="step-title">Click Relaunch, then open Mosspack again</div>
+					<details><summary>Show screenshot</summary><img src="{{IMG3}}" alt="The Relaunch button"></details></li>
+			</ol>
+		</section>
+
+		<section class="panel" data-panel="edge" hidden>
+			<ol class="steps">
+				<li><div class="step-title">Update Edge</div>
+					<div class="hint">… menu → Help and feedback → About Microsoft Edge.</div></li>
+				<li><div class="step-title">Still not working? Open this address in a new tab</div>
+					<div class="code-row"><code>edge://flags/#enable-experimental-webassembly-jspi</code><button class="copy">Copy</button></div>
+					<details><summary>Show screenshot</summary><img src="{{IMG4}}" alt="edge://flags in the address bar"></details></li>
+				<li><div class="step-title">Set "Experimental WebAssembly" to Enabled</div>
+					<details><summary>Show screenshots</summary><img src="{{IMG5}}" alt="Searching the flags"><img src="{{IMG6}}" alt="The flag set to Enabled"></details></li>
+				<li><div class="step-title">Click Restart, then open Mosspack again</div>
+					<details><summary>Show screenshot</summary><img src="{{IMG7}}" alt="The Restart button"></details></li>
+			</ol>
+		</section>
+
+		<section class="panel" data-panel="firefox" hidden>
+			<div class="note">Firefox support for JSPI is still experimental and can be unstable. Brave, Chrome or Edge will give you a much better experience.</div>
+			<ol class="steps">
+				<li><div class="step-title">Update Firefox, then try again</div></li>
+				<li><div class="step-title">Still not working? Open this address in a new tab</div>
+					<div class="code-row"><code>about:config</code><button class="copy">Copy</button></div>
+					<details><summary>Show screenshot</summary><img src="{{IMG8}}" alt="about:config"></details></li>
+				<li><div class="step-title">Search for this setting and set it to <b>true</b></div>
+					<div class="code-row"><code>javascript.options.wasm_js_promise_integration</code><button class="copy">Copy</button></div>
+					<details><summary>Show screenshots</summary><img src="{{IMG9}}" alt="Searching for the setting"><img src="{{IMG10}}" alt="The setting set to true"></details></li>
+				<li><div class="step-title">Reload this page</div></li>
+			</ol>
+		</section>
+
+		<section class="panel" data-panel="safari" hidden>
+			<div class="note">Safari doesn't support JSPI yet, and there's no setting to turn it on.</div>
+			<ol class="steps">
+				<li><div class="step-title">Open Mosspack in Brave, Chrome or Edge instead</div>
+					<div class="hint">In Finder, right-click the Mosspack file → Open With → Brave Browser (or Google Chrome).</div></li>
+			</ol>
+		</section>
+
+		<div class="actions">
+			<button class="btn primary" id="retry">Try again</button>
+			<span class="hint">Changed a setting or updated? Click Try again. If the browser asked to relaunch, do that first.</span>
+		</div>
+	</main>
+
+	<footer>Mosspack 1.12.2 · needs WebAssembly GC + JSPI</footer>
+</div>
+<script>
+(function () {
+	var ua = navigator.userAgent || "";
+	var pick = "chrome", name = "Chrome";
+	if (navigator.brave) { pick = "brave"; name = "Brave"; }
+	else if (/Edg\//.test(ua)) { pick = "edge"; name = "Microsoft Edge"; }
+	else if (/Firefox\//.test(ua)) { pick = "firefox"; name = "Firefox"; }
+	else if (/Safari\//.test(ua) && !/Chrome\/|Chromium\//.test(ua)) { pick = "safari"; name = "Safari"; }
+	else if (/Chrome\//.test(ua)) { pick = "chrome"; name = "Chrome"; }
+	var m = ua.match(/(?:Chrome|Firefox|Version)\/(\d+)/);
+	document.getElementById("detected").textContent = name + (m ? " " + m[1] : "");
+
+	function select(id) {
+		document.querySelectorAll(".tab").forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.tab === id)); });
+		document.querySelectorAll(".panel").forEach(function (p) { p.hidden = p.dataset.panel !== id; });
+	}
+	document.querySelectorAll(".tab").forEach(function (t) { t.addEventListener("click", function () { select(t.dataset.tab); }); });
+	select(pick);
+
+	document.querySelectorAll("button.copy").forEach(function (b) {
+		b.addEventListener("click", function () {
+			var text = b.previousElementSibling.textContent;
+			function done(ok) { b.textContent = ok ? "Copied" : "Select & copy"; setTimeout(function () { b.textContent = "Copy"; }, 1600); }
+			try {
+				navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallback(); });
+			} catch (e) { fallback(); }
+			function fallback() {
+				var r = document.createRange(); r.selectNodeContents(b.previousElementSibling);
+				var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+				var ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+				done(ok);
+			}
+		});
+	});
+
+	document.getElementById("retry").addEventListener("click", function () {
+		try { window.top.location.reload(); } catch (e) { location.reload(); }
+	});
+})();
+</script>
+</body>
+</html>
