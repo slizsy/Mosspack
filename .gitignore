@@ -1,4 +1,5 @@
 # release builds are attached to GitHub Releases, not committed
 *.html
 !src/ui/*.html
+!Mosspack.html
 .DS_Store
