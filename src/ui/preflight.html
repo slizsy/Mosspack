@@ -1,54 +1,117 @@
 <script type="text/javascript">
-/* Mosspack preflight: check the browser before the game loads, and never leave a blank page.
- * Shows a readable message if WebAssembly / WebAssembly GC are missing (JSPI is handled by the loader's own
- * page), if a startup error happens, or if nothing has appeared after 20 seconds. */
+/* Mosspack preflight: runs before anything else so the page is never just white.
+ *  - checks the browser (WebAssembly GC is required; JSPI is reported, the loader's own help page covers it)
+ *  - shows a loading screen at once, with the current step (read from the loader's progress messages),
+ *    elapsed time and a short browser report, until the game's start screen, the game or an error appears
+ *  - turns startup errors and long stalls into a readable message */
 (function () {
 	"use strict";
-	var shown = false;
-	function card(title, lines) {
-		if (shown) return; shown = true;
-		var d = document.createElement("div");
-		d.setAttribute("style", "position:fixed;inset:0;z-index:2147483000;background:#12170f;color:#e9eee3;display:flex;align-items:center;justify-content:center;padding:20px;font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif");
-		var html = '<div style="max-width:640px;background:#1c2417;border:2px solid #34422b;border-radius:8px;box-shadow:0 4px 0 #0b0e09;padding:28px 30px">' +
-			'<div style="font:700 22px/1 Menlo,Consolas,monospace;margin-bottom:18px">moss<span style="color:#6fbf4a">pack</span></div>' +
-			'<h1 style="font-size:24px;line-height:1.25;margin:0 0 12px">' + title + '</h1>';
-		for (var i = 0; i < lines.length; i++) html += '<p style="margin:8px 0;color:#c4ceb9">' + lines[i] + '</p>';
-		html += '<p style="margin:18px 0 0;color:#7f8c75;font-size:13px">Browser: ' + (navigator.userAgent || "unknown").replace(/</g, "&lt;") + '</p>' +
-			'<button onclick="location.reload()" style="margin-top:18px;background:#6fbf4a;color:#0f140c;border:none;border-radius:4px;padding:11px 18px;font:700 15px/1 inherit;cursor:pointer;box-shadow:inset -3px -3px 0 #3f7a29">Try again</button></div>';
-		d.innerHTML = html;
-		(document.body || document.documentElement).appendChild(d);
-	}
+	var started = Date.now(), done = false, step = "Reading the game file", overlay = null, status = null, hints = null;
 	var update = "Use an up-to-date <b>Chrome</b>, <b>Edge</b> or <b>Brave</b> (version 137 or newer). On a Chromebook: Settings → About ChromeOS → Check for updates.";
-	window.__mosspackPreflight = card;
-
-	// 1. WebAssembly + WebAssembly GC (a one-struct module only validates when GC is supported)
+	var ua = navigator.userAgent || "";
+	var ver = (ua.match(/(?:Chrome|Firefox|Version)\/(\d+)/) || [])[1];
+	var browser = (navigator.brave ? "Brave" : /CrOS/.test(ua) ? "Chromebook (ChromeOS)" : /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox"
+		: /Safari\//.test(ua) && !/Chrome\//.test(ua) ? "Safari" : /Chrome\//.test(ua) ? "Chrome" : "Unknown browser") + (ver ? " " + ver : "");
 	var wasm = typeof WebAssembly === "object" && typeof WebAssembly.validate === "function";
 	var gc = false;
 	try { gc = wasm && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 127, 0])); } catch (e) {}
-	if (!wasm || !gc) {
-		document.addEventListener("DOMContentLoaded", function () {
-			card("This browser is too old for Mosspack", [
-				"Mosspack needs <b>WebAssembly" + (wasm ? " GC" : "") + "</b>, which this browser doesn't support.", update]);
-		});
-		window.__mosspackBlocked = true;       // the page's load handler skips starting the game
+	var jspi = wasm && typeof WebAssembly.Suspending === "function";
+	var mem = navigator.deviceMemory;            // GB, rounded down and capped at 8 by the browser
+
+	var BOX = "max-width:620px;width:100%;background:#1c2417;border:2px solid #34422b;border-radius:8px;box-shadow:0 4px 0 #0b0e09;padding:26px 28px;color:#e9eee3";
+	function root(html) {
+		if (!overlay) {
+			overlay = document.createElement("div");
+			overlay.setAttribute("style", "position:fixed;inset:0;z-index:2147483000;background:#12170f;display:flex;align-items:center;justify-content:center;" +
+				"padding:20px;font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif");
+			document.documentElement.appendChild(overlay);   // <body> doesn't exist yet; <html> paints right away
+		}
+		overlay.innerHTML = '<div style="' + BOX + '"><div style="font:700 22px/1 Menlo,Consolas,monospace;margin-bottom:16px">moss<span style="color:#6fbf4a">pack</span></div>' + html + '</div>';
+	}
+	function check(ok, label, warn) {
+		return '<div style="color:' + (ok ? "#a8d48f" : warn ? "#e8b84a" : "#e67b6b") + '">' + (ok ? "✓ " : warn ? "! " : "✗ ") + label + "</div>";
+	}
+	function report() {
+		return '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #34422b;font-size:13px;line-height:1.7">' +
+			'<div style="color:#8d9a83">' + browser + "</div>" +
+			check(gc, "WebAssembly GC") + check(jspi, "JSPI" + (jspi ? "" : " (needed; a help page will explain)"), true) +
+			(mem ? check(mem >= 4, "About " + mem + " GB of memory" + (mem >= 4 ? "" : " (the game needs about 1 GB free; close other tabs)"), true) : "") + "</div>";
+	}
+
+	// fatal message (replaces the loading screen)
+	function card(title, lines) {
+		if (done) return; done = true;
+		var html = '<h1 style="font-size:24px;line-height:1.25;margin:0 0 12px">' + title + "</h1>";
+		for (var i = 0; i < lines.length; i++) html += '<p style="margin:8px 0;color:#c4ceb9">' + lines[i] + "</p>";
+		root(html + report() + '<button onclick="location.reload()" style="margin-top:18px;background:#6fbf4a;color:#0f140c;border:none;border-radius:4px;' +
+			'padding:11px 18px;font:700 15px/1 inherit;cursor:pointer;box-shadow:inset -3px -3px 0 #3f7a29">Try again</button>');
+	}
+	window.__mosspackPreflight = card;
+
+	// Reset: open the file with #reset at the end of the address to delete everything this browser saved for it
+	// (worlds, resource packs, servers, settings, profile, Moss Client). Runs before the game opens its storage.
+	if (location.hash === "#reset") {
+		window.__mosspackBlocked = true;
+		window.__mosspackReset = function () {
+			var dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
+			dbs.then(function (list) {
+				return Promise.all(list.map(function (d) {
+					return new Promise(function (r) { var q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = r; });
+				}));
+			}).then(function () {
+				try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+				done = false;
+				card("Everything has been reset", ["Worlds, resource packs, servers, settings and your profile are back to default. Click below to start fresh."]);
+				var start = overlay.querySelector("button");
+				start.textContent = "Start Mosspack";
+				start.onclick = function () { location.replace(location.href.split("#")[0]); };
+			});
+		};
+		card("Reset Mosspack?", ["This deletes everything this browser saved for Mosspack: <b>all worlds</b>, resource packs, servers, settings, your profile and Moss Client settings. It can't be undone.",
+			'<button onclick="__mosspackReset()" style="background:#c0503f;color:#fff;border:none;border-radius:4px;padding:11px 18px;font:700 15px/1 inherit;cursor:pointer">Delete everything</button> ' +
+			'<a href="#" onclick="location.replace(location.href.split(\'#\')[0]);return false" style="color:#a8b59c;margin-left:10px">Cancel</a>']);
+		overlay.querySelector("button[onclick='location.reload()']").remove();
 		return;
 	}
 
-	// 2. Startup errors become a message instead of a blank page
+	if (!wasm || !gc) {
+		window.__mosspackBlocked = true;                        // the page's load handler won't start the game
+		card("This browser is too old for Mosspack", ["Mosspack needs <b>WebAssembly" + (wasm ? " GC" : "") + "</b>, which this browser doesn't support.", update]);
+		return;
+	}
+
+	// loading screen with live progress
+	root('<h1 style="font-size:22px;margin:0 0 6px">Loading Mosspack…</h1><div id="mp-step" style="color:#c4ceb9"></div><div id="mp-hints"></div>' + report());
+	status = document.getElementById("mp-step"); hints = document.getElementById("mp-hints");
+	var STEPS = [[/Downloading EPW/, "Reading the game file"], [/CRC32/, "Checking the game file"], [/Decompressing classes\.wasm/, "Unpacking the game"],
+		[/Decompressing assets/, "Unpacking textures and sounds"], [/Initializing EagRuntime/, "Starting up"], [/WebGL/, "Starting the graphics"],
+		[/Loading .* WASM GC binary/, "Loading the game code"], [/audio context/, "Almost ready"]];
+	var log = console.log;
+	console.log = function () {
+		try { var msg = String(arguments[0]); for (var i = 0; i < STEPS.length; i++) if (STEPS[i][0].test(msg)) step = STEPS[i][1]; } catch (e) {}
+		return log.apply(console, arguments);
+	};
+	var tick = setInterval(function () {
+		if (done) return clearInterval(tick);
+		// the start screen, the game, the browser-help page or a crash screen is showing: our job is done
+		if (document.querySelector("._eaglercraftX_press_any_key_image, ._eaglercraftX_mobile_press_any_key, canvas, iframe, ._eaglercraftX_integratedserver_crash_element")) {
+			done = true; console.log = log; overlay.remove(); return clearInterval(tick);
+		}
+		var s = Math.round((Date.now() - started) / 1000);
+		status.textContent = step + "… (" + s + "s)";
+		if (s === 40) hints.innerHTML = '<p style="margin:12px 0 0;color:#e8b84a;font-size:14px">This is taking a while. Slower computers and Chromebooks can need a minute or two. ' +
+			"If it doesn't move on, close other tabs and click reload. Open the file from your <b>Downloads</b> folder in Chrome, not from a Google Drive or email preview.</p>";
+		if (s >= 150) card("Mosspack stopped while " + step.toLowerCase(), ["Nothing has changed for over two minutes. This usually means the computer ran out of memory or the browser is blocking part of the page.",
+			"Close other tabs and try again. School or work Chromebooks sometimes block games that run from a file; if so, try a personal computer.", update]);
+	}, 500);
+
+	// startup errors (before the game is running) become a message
 	function onErr(msg) {
-		if (document.querySelector("canvas")) return;           // the game is running; let it handle its own errors
-		card("Mosspack couldn't start", ["Something went wrong while loading:", "<code style='color:#cfe8bf'>" + String(msg).replace(/</g, "&lt;").slice(0, 300) + "</code>",
+		if (document.querySelector("canvas")) return;
+		card("Mosspack couldn't start", ["Something went wrong while " + step.toLowerCase() + ":", "<code style='color:#cfe8bf'>" + String(msg).replace(/</g, "&lt;").slice(0, 300) + "</code>",
 			"Reloading usually fixes it. If it keeps happening, close other tabs (the game needs about 1 GB of memory). " + update]);
 	}
 	window.addEventListener("error", function (e) { onErr(e.message || e.error || "unknown error"); });
 	window.addEventListener("unhandledrejection", function (e) { onErr((e.reason && (e.reason.message || e.reason)) || "unknown error"); });
-
-	// 3. Watchdog: something should be on screen within 20 seconds
-	setTimeout(function () {
-		var visible = document.querySelector("canvas, iframe, ._eaglercraftX_press_any_key_image, ._eaglercraftX_mobile_press_any_key, ._eaglercraftX_integratedserver_crash_element");
-		if (!visible) card("Mosspack is taking too long to start", [
-			"Nothing has appeared after 20 seconds. This usually means the browser ran out of memory or is blocking part of the page.",
-			"Close other tabs and click Try again. Opening the file from your Downloads folder in Chrome works best (not from inside Google Drive's preview).", update]);
-	}, 20000);
 })();
 </script>

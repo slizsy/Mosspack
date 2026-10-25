@@ -12,7 +12,7 @@ block = Image.new('RGBA', (8, 8))
 for y, r in enumerate(rows):
     for x, ch in enumerate(r): block.putpixel((x, y), pal[ch] + (255,))
 
-def draw(size, word_px, sub=None, mode='RGBA', bg=(255, 255, 255, 255)):
+def draw(size, word_px, sub=None, mode='RGBA', bg=(255, 255, 255, 255), fg=(46, 82, 36, 255), sub_fg=(40, 40, 40, 255)):
     im = Image.new('RGBA', size, bg)
     d = ImageDraw.Draw(im)
     f = ImageFont.truetype(FONT, word_px)
@@ -28,14 +28,15 @@ def draw(size, word_px, sub=None, mode='RGBA', bg=(255, 255, 255, 255)):
         fs = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', word_px // 2)
         sub_h = word_px // 2 + word_px // 2
     y0 = (size[1] - (asc + desc) - sub_h) / 2
-    d.text((x0, y0), text, font=f, fill=(46, 82, 36, 255))
+    d.text((x0, y0), text, font=f, fill=fg)
     im.alpha_composite(block.resize((bs, bs), Image.NEAREST), (int(x0 + tw + gap), int(y0 + asc - bs)))
     if sub:
         sw = d.textlength(sub, font=fs)
-        d.text(((size[0] - sw) / 2, y0 + asc + desc + word_px // 3), sub, font=fs, fill=(40, 40, 40, 255))
+        d.text(((size[0] - sw) / 2, y0 + asc + desc + word_px // 3), sub, font=fs, fill=sub_fg)
     return im.convert(mode) if mode != 'RGBA' else im
 
-draw((512, 512), 78, sub='WASM-GC').save(f'{out}/splash.png')
+# boot splash on the dark loading background (a white splash looked like a blank page while loading)
+draw((512, 512), 78, sub='Loading…', bg=(18, 23, 15, 255), fg=(233, 238, 227, 255), sub_fg=(141, 154, 131, 255)).save(f'{out}/splash.png')
 draw((305, 113), 56, mode='L').save(f'{out}/logo-305x113.png')
 draw((256, 256), 38, bg=(255, 255, 255, 0)).save(f'{out}/eagtek.png')
 block.resize((32, 32), Image.NEAREST).convert('RGB').save(f'{out}/icon-32.png')
