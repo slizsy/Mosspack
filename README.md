@@ -18,8 +18,6 @@
 - **LAN that works anywhere.** Press Esc → **Open to LAN** and you get a six-letter code. Friends type it into
   Direct Connect from their own Wi-Fi, school network or phone hotspot. No server, no port forwarding, no app.
 - **Zoom** (hold **Z**) and a **Toggle FPS Display** key (**F4**), both rebindable in Controls.
-- **Moss Client:** a Meteor-style module menu (Fly, Speed, Fullbright, ESP, God Mode and more) that only
-  works in your own worlds. Unlock it with `/hacks <code>` in chat, then press **Right Shift**.
 - **Quality-of-life fixes:** starts straight to the title screen, clear start screen, faster list scrolling,
   join/leave notifications, and a friendly page instead of a blank screen when a browser can't run it.
 
