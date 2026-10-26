@@ -1,0 +1,92 @@
+<script type="text/javascript">
+/* Mosspack preflight: runs before anything else.
+ *  - checks the browser (WebAssembly GC and exceptions are required) and explains what to update if not
+ *  - open the file with #reset at the end of the address to delete everything this browser saved for it
+ *  - if loading stops moving for two minutes, says so instead of leaving a frozen screen
+ * Loading progress itself is shown by the page's loading screen (window.__eaglerBoot updates #boot_status). */
+(function () {
+	"use strict";
+	var done = false, overlay = null;
+	var update = "Use an up-to-date <b>Chrome</b>, <b>Edge</b> or <b>Brave</b> (version 137 or newer). On a Chromebook: Settings → About ChromeOS → Check for updates.";
+	var ua = navigator.userAgent || "";
+	var ver = (ua.match(/(?:Chrome|Firefox|Version)\/(\d+)/) || [])[1];
+	var browser = (navigator.brave ? "Brave" : /CrOS/.test(ua) ? "Chromebook (ChromeOS)" : /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox"
+		: /Safari\//.test(ua) && !/Chrome\//.test(ua) ? "Safari" : /Chrome\//.test(ua) ? "Chrome" : "Unknown browser") + (ver ? " " + ver : "");
+	var wasm = typeof WebAssembly === "object" && typeof WebAssembly.validate === "function";
+	var gc = false;
+	try { gc = wasm && WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 95, 1, 127, 0])); } catch (e) {}
+	var exceptions = wasm && typeof WebAssembly.Exception === "function";
+	var mem = navigator.deviceMemory;            // GB, rounded down and capped at 8 by the browser
+
+	var BOX = "max-width:620px;width:100%;background:#1c2417;border:2px solid #34422b;border-radius:8px;box-shadow:0 4px 0 #0b0e09;padding:26px 28px;color:#e9eee3";
+	function root(html) {
+		if (!overlay) {
+			overlay = document.createElement("div");
+			overlay.setAttribute("style", "position:fixed;inset:0;z-index:2147483647;background:#12170f;display:flex;align-items:center;justify-content:center;" +
+				"padding:20px;font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif");
+			document.documentElement.appendChild(overlay);   // <body> doesn't exist yet; <html> paints right away
+		}
+		overlay.innerHTML = '<div style="' + BOX + '"><div style="font:700 22px/1 Menlo,Consolas,monospace;margin-bottom:16px">moss<span style="color:#6fbf4a">pack</span></div>' + html + '</div>';
+	}
+	function check(ok, label, warn) {
+		return '<div style="color:' + (ok ? "#a8d48f" : warn ? "#e8b84a" : "#e67b6b") + '">' + (ok ? "✓ " : warn ? "! " : "✗ ") + label + "</div>";
+	}
+	function report() {
+		return '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #34422b;font-size:13px;line-height:1.7">' +
+			'<div style="color:#8d9a83">' + browser + "</div>" + check(gc, "WebAssembly GC") + check(exceptions, "WebAssembly exceptions") +
+			(mem ? check(mem >= 4, "About " + mem + " GB of memory" + (mem >= 4 ? "" : " (the game needs about 2 GB free; close other tabs)"), true) : "") + "</div>";
+	}
+	function card(title, lines, button) {
+		if (done) return; done = true;
+		var html = '<h1 style="font-size:24px;line-height:1.25;margin:0 0 12px">' + title + "</h1>";
+		for (var i = 0; i < lines.length; i++) html += '<p style="margin:8px 0;color:#c4ceb9">' + lines[i] + "</p>";
+		root(html + report() + (button === false ? "" : '<button style="margin-top:18px;background:#6fbf4a;color:#0f140c;border:none;border-radius:4px;' +
+			'padding:11px 18px;font:700 15px/1 inherit;cursor:pointer;box-shadow:inset -3px -3px 0 #3f7a29">' + (button || "Try again") + "</button>"));
+		var b = overlay.querySelector("button:last-child");
+		if (b && button !== false) b.onclick = function () { location.reload(); };
+	}
+	window.__mosspackPreflight = card;               // the loader uses it if part of the file is missing
+	function home() { location.replace(location.href.split("#")[0]); }
+
+	// #reset: delete worlds, resource packs, servers, settings and profile. Runs before the game opens its storage.
+	if (location.hash === "#reset") {
+		window.__mosspackBlocked = true;
+		window.__mosspackReset = function () {
+			var dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
+			dbs.then(function (list) {
+				return Promise.all(list.map(function (d) {
+					return new Promise(function (r) { var q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = r; });
+				}));
+			}).then(function () {
+				try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+				done = false;
+				card("Everything has been reset", ["Worlds, resource packs, servers, settings and your profile are back to default."], "Start Mosspack");
+				overlay.querySelector("button").onclick = home;
+			});
+		};
+		card("Reset Mosspack?", ["This deletes everything this browser saved for Mosspack: <b>all worlds</b>, resource packs, servers, settings and your profile. It can't be undone.",
+			'<button onclick="__mosspackReset()" style="background:#c0503f;color:#fff;border:none;border-radius:4px;padding:11px 18px;font:700 15px/1 inherit;cursor:pointer">Delete everything</button> ' +
+			'<a href="#" id="mp-cancel" style="color:#a8b59c;margin-left:10px">Cancel</a>'], false);
+		document.getElementById("mp-cancel").onclick = function () { home(); return false; };
+		return;
+	}
+
+	if (!wasm || !gc || !exceptions) {
+		window.__mosspackBlocked = true;
+		card("This browser is too old for Mosspack", ["Mosspack needs <b>WebAssembly " + (!wasm ? "" : !gc ? "GC" : "exceptions") + "</b>, which this browser doesn't support.", update]);
+		return;
+	}
+
+	// watchdog: the loading screen's status line should keep changing until the game is up
+	var last = "", still = 0;
+	var tick = setInterval(function () {
+		var load = document.getElementById("loading_screen"), st = document.getElementById("boot_status");
+		if (done || !load || load.classList.contains("is-ready") || load.classList.contains("minecraft-stage")) return void (load && clearInterval(tick));
+		var now = st ? st.textContent : "";
+		still = now === last ? still + 1 : 0; last = now;
+		if (still === 120) card("Mosspack stopped loading", ["Nothing has changed for two minutes (last step: " + (now || "starting").replace(/</g, "&lt;") + ").",
+			"This usually means the computer ran out of memory or the browser is blocking part of the page. Close other tabs and try again. " +
+			"School or work Chromebooks sometimes block games that run from a file; if so, try a personal computer.", update]);
+	}, 1000);
+})();
+</script>

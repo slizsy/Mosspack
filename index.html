@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mosspack</title>
+<style>
+	:root {
+		--bg: #15191a; --bg2: #1d2324; --card: #232b2c; --edge: #3a4647; --text: #e8ece6; --muted: #9aa8a2;
+		--moss: #6fbf4a; --moss-dark: #3f7a2a; --warn: #f2b33d; --warn-bg: rgba(242, 179, 61, .12);
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; min-height: 100%; }
+	body {
+		background: radial-gradient(1200px 600px at 50% -10%, #23361f 0%, transparent 60%), var(--bg);
+		color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+		display: flex; flex-direction: column; align-items: center; padding: 48px 16px 32px;
+	}
+	header { text-align: center; margin-bottom: 36px; }
+	.logo {
+		font: 900 clamp(44px, 10vw, 80px)/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .04em;
+		color: var(--moss); text-shadow: 4px 4px 0 var(--moss-dark), 8px 8px 0 rgba(0, 0, 0, .35); margin: 0;
+	}
+	header p { color: var(--muted); margin: 14px 0 0; }
+	main { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; width: 100%; max-width: 860px; }
+	.card {
+		background: linear-gradient(180deg, var(--card), var(--bg2)); border: 2px solid var(--edge); border-radius: 6px;
+		padding: 24px; display: flex; flex-direction: column; gap: 14px;
+		box-shadow: inset 0 2px 0 rgba(255, 255, 255, .05), 0 8px 24px rgba(0, 0, 0, .35);
+	}
+	.card h2 { margin: 0; font-size: 26px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+	.tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; border-radius: 3px; }
+	.tag.stable { background: rgba(111, 191, 74, .15); color: var(--moss); border: 1px solid var(--moss-dark); }
+	.tag.unstable { background: var(--warn-bg); color: var(--warn); border: 1px solid #8a6420; }
+	.card ul { margin: 0; padding-left: 20px; color: var(--muted); }
+	.card li { margin: 3px 0; }
+	.warning { background: var(--warn-bg); border-left: 4px solid var(--warn); padding: 10px 12px; border-radius: 3px; font-size: 14px; }
+	.warning b { color: var(--warn); }
+	.size { color: var(--muted); font-size: 13px; }
+	/* Minecraft-style button */
+	.play {
+		margin-top: auto; display: block; text-align: center; text-decoration: none; color: #fff; font-weight: 700; font-size: 18px;
+		padding: 12px; border: 2px solid #000; border-radius: 2px; text-shadow: 2px 2px 0 #3f3f3f;
+		background: linear-gradient(180deg, #8b8b8b 0%, #6f6f6f 100%);
+		box-shadow: inset 2px 2px 0 rgba(255, 255, 255, .35), inset -2px -3px 0 rgba(0, 0, 0, .35);
+	}
+	.play:hover, .play:focus-visible { background: linear-gradient(180deg, #7f9fd6, #5d7cb4); outline: none; }
+	.play.green { background: linear-gradient(180deg, #6fbf4a, #4b8f30); }
+	.play.green:hover, .play.green:focus-visible { background: linear-gradient(180deg, #82d45b, #59a33a); }
+	footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 36px; max-width: 640px; }
+	footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+	<h1 class="logo">MOSSPACK</h1>
+	<p>Minecraft in one HTML file. Pick a version to start.</p>
+</header>
+
+<main>
+	<section class="card">
+		<h2>1.12.2 <span class="tag stable">Stable</span></h2>
+		<ul>
+			<li>Singleplayer, multiplayer and LAN that works across any Wi-Fi</li>
+			<li>Zoom (Z), FPS display (F4), fullbright, screen shake option</li>
+			<li>Runs on most computers and Chromebooks</li>
+		</ul>
+		<div class="size">Mosspack.html · 23 MB</div>
+		<a class="play green" href="Mosspack.html">Play 1.12.2</a>
+	</section>
+
+	<section class="card">
+		<h2>26.3 <span class="tag unstable">Unstable</span></h2>
+		<div class="warning"><b>Work in progress.</b> 26.3 still has bugs. LAN may not connect, and it can crash or run
+			slowly on weaker computers. Use 1.12.2 if you just want to play.</div>
+		<ul>
+			<li>The newest Minecraft, with a 3D skin and cape preview</li>
+			<li>Colored FPS/TPS counter, fullbright, crash helper</li>
+			<li>Needs a recent Chrome, Edge or Firefox</li>
+		</ul>
+		<div class="size">Mosspack-26.html · 84 MB (takes longer to load)</div>
+		<a class="play" href="Mosspack-26.html">Play 26.3 (beta)</a>
+	</section>
+</main>
+
+<footer>
+	Made by slizsy. Each version keeps its own worlds and settings.<br>
+	Mosspack is a personal, non-commercial project based on Eaglercraft by lax1dude and ayunami2000.
+	Minecraft is © Mojang AB / Microsoft. Not affiliated with or endorsed by Mojang or Microsoft.
+</footer>
+</body>
+</html>

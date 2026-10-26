@@ -2,17 +2,32 @@
 
 # mosspack
 
-**Minecraft 1.12.2 in one HTML file. Open it in your browser and play: singleplayer, multiplayer, and LAN with friends on any network.**
+**Minecraft in one HTML file. Open it in your browser and play: singleplayer, multiplayer, and LAN with friends on any network.**
 
-![Mosspack title screen](docs/screenshots/title-screen.png)
+![Mosspack version picker](docs/screenshots/version-picker.png)
 
-[Download the latest release](../../releases/latest) · [Playing with friends](#playing-with-friends-lan) · [Troubleshooting](#troubleshooting)
+[Versions](#versions) · [Play](#play) · [Playing with friends](#playing-with-friends-lan) · [Troubleshooting](#troubleshooting)
 
 </div>
 
 ---
 
-## What's in it
+## Versions
+
+| | Version | File | Status |
+|---|---|---|---|
+| ![1.12.2](docs/screenshots/title-screen.png) | **1.12.2** | [`Mosspack.html`](Mosspack.html) (23 MB) | ✅ **Stable**, the one to play |
+| ![26.3](docs/screenshots/26-title-screen.png) | **26.3** | [`Mosspack-26.html`](Mosspack-26.html) (84 MB) | ⚠️ **Unstable**, still being worked on |
+
+Open **[`index.html`](index.html)** to choose between them. The two versions keep separate worlds, settings and
+profiles, so playing one never touches the other.
+
+> **26.3 is a work in progress.** LAN doesn't connect reliably yet, and it can crash or run slowly on weaker
+> computers. What it has so far: 3D skin and cape preview (all official capes), colored FPS/TPS counter,
+> fullbright, a crash helper, Open to LAN from the pause menu and fullscreen. Notes and build scripts are in
+> [`v26/`](v26/README.md).
+
+## What's in 1.12.2
 
 - **One file, no install.** Everything (game, textures, sounds) is packed into a single `Mosspack.html`. It runs offline.
 - **LAN that works anywhere.** Press Esc → **Open to LAN** and you get a six-letter code. Friends type it into
@@ -28,8 +43,8 @@
 
 ## Play
 
-1. Download **`Mosspack.html`** from [Releases](../../releases/latest).
-2. Open it in **Chrome, Edge or Brave**: double-click it, or drag it onto a browser window.
+1. Download the repository (**Code → Download ZIP**) and unzip it, or download just **`Mosspack.html`**.
+2. Open **`index.html`** (or a game file directly) in **Chrome, Edge or Brave**: double-click it, or drag it onto a browser window.
 3. Click once on the start screen (browsers need one click before a page can play sound).
 
 Your worlds and settings are saved in the browser, per file location. Keep the file in the same place
@@ -121,9 +136,11 @@ for that file.
 
 ## What's in this repository
 
-Only original Mosspack code and release builds. Game code and assets are not stored here.
-
 ```
+index.html               version picker
+Mosspack.html            1.12.2 build (stable)
+Mosspack-26.html         26.3 build (unstable)
+v26/                     26.3 build script, page scripts, art and tools
 src/core.js              shared helpers and the hooks Mosspack adds to the game runtime
 src/lan/lan.js           LAN: code generation, WebRTC matchmaking, host bridge, LanSocket
 src/ui/start-screen.js   the "Click or press any key to start" screen

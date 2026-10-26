@@ -3,3 +3,6 @@
 !src/ui/*.html
 !Mosspack.html
 .DS_Store
+!Mosspack-26.html
+!index.html
+!v26/mod/preflight.html
