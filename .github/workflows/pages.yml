@@ -24,11 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ship the picker + both builds as-is
+      # copy the picker + both game builds
       - name: Build site
         run: |
           mkdir _site
-          cp index.html Mosspack.html Mosspack-26.html _site/
+          cp index.html _site/index.html
+          cp Mosspack.html _site/Mosspack.html
+          cp Mosspack-26.html _site/Mosspack-26.html
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
