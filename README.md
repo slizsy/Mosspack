@@ -138,8 +138,3 @@ docs/screenshots/        images used in this README
 Mosspack is a personal, non-commercial project and is **not affiliated with Mojang or Microsoft**.
 
 - **Minecraft** is © Mojang Studios / Microsoft. The game and its assets belong to them.
-- Built on **Eaglercraft 1.12** by PeytonPlayz585, which is based on **EaglercraftX** by lax1dude and ayunami2000.
-- Compiled with **TeaVM**; packaging uses **binaryen**; LAN matchmaking uses **ntfy.sh**.
-
-The release file contains Minecraft's code and assets, so this repository should stay **private**. Don't share
-or host the release publicly.
