@@ -88,11 +88,12 @@ Mosspack 1.12 (private build). Needs a browser with WebAssembly GC and JSPI (Chr
 		window.__mosspackReset = function () {
 			var dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
 			dbs.then(function (list) {
-				return Promise.all(list.map(function (d) {
+				// only Mosspack 1.12.2; Mosspack 26.3 keeps its own data
+				return Promise.all(list.filter(function (d) { return !/mosspack26/.test(d.name); }).map(function (d) {
 					return new Promise(function (r) { var q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = r; });
 				}));
 			}).then(function () {
-				try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+				try { Object.keys(localStorage).filter(function (k) { return !/^_?mosspack26/.test(k); }).forEach(function (k) { localStorage.removeItem(k); }); sessionStorage.clear(); } catch (e) {}
 				done = false;
 				card("Everything has been reset", ["Worlds, resource packs, servers, settings and your profile are back to default. Click below to start fresh."]);
 				var start = overlay.querySelector("button");

@@ -57,11 +57,12 @@
 		window.__mosspackReset = function () {
 			var dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
 			dbs.then(function (list) {
-				return Promise.all(list.map(function (d) {
+				// only Mosspack 26.3 data
+				return Promise.all(list.filter(function (d) { return /mosspack26/.test(d.name); }).map(function (d) {
 					return new Promise(function (r) { var q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = r; });
 				}));
 			}).then(function () {
-				try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+				try { Object.keys(localStorage).filter(function (k) { return /^_?mosspack26/.test(k); }).forEach(function (k) { localStorage.removeItem(k); }); sessionStorage.clear(); } catch (e) {}
 				done = false;
 				card("Everything has been reset", ["Worlds, resource packs, servers, settings and your profile are back to default."], "Start Mosspack");
 				overlay.querySelector("button").onclick = home;
